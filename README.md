@@ -2,13 +2,16 @@
 
 A LazyDocker-style terminal UI for monitoring development servers. It automatically detects running dev server processes and lets you start, stop, restart, and inspect managed servers you define in config.
 
-Process scanning is fully implemented on Linux (via `/proc`). macOS and Windows have stub implementations — `openUrl` works on both, but process detection is not yet implemented.
+Supported on Linux and macOS. Windows has a stub implementation — `openUrl` works, but process detection is not implemented.
 
 ## Requirements
 
 - Node.js (ESM)
 - pnpm
-- Linux for full functionality; macOS/Windows for `openUrl` only
+- Linux or macOS for full functionality
+  - Linux: uses `/proc` — no additional tools required
+  - macOS: uses `lsof` and `ps` — both are standard macOS tools, no installation needed
+- Windows: `openUrl` only (`start` command)
 
 ## Installation
 
@@ -72,7 +75,7 @@ Three panels, navigable by `Tab`:
 | `j` / `k` / `↑` `↓` | Navigate server list |
 | `Tab` | Cycle panel focus |
 | `l` | Focus log panel |
-| `o` | Open server URL in browser (`xdg-open`) |
+| `o` | Open server URL in browser (`xdg-open` on Linux, `open` on macOS) |
 | `s` | Stop — SIGTERM, then SIGKILL after 5 seconds |
 | `x` | Kill — SIGKILL immediately |
 | `r` | Restart (managed servers only) |
@@ -139,7 +142,7 @@ The file is created with defaults on first run if it does not exist. You can als
 
 | Field | Default | Description |
 |---|---|---|
-| `scanIntervalMs` | `2000` | How often to scan `/proc` for new processes (ms) |
+| `scanIntervalMs` | `2000` | How often to scan for new processes (ms) |
 | `statsIntervalMs` | `1000` | How often to update CPU stats for running servers (ms) |
 | `maxLogLines` | `500` | Maximum log lines retained per server |
 
@@ -147,26 +150,40 @@ Press `R` inside the TUI to reload config from disk without restarting. Running 
 
 ## How process detection works
 
-Process detection is Linux-only. On each scan interval, lazyservmon reads `/proc` to find running processes that look like dev servers. A process qualifies if:
+On each scan interval, lazyservmon finds running processes that look like dev servers. A process qualifies if:
 
 1. Its command basename matches a known dev tool: `vite`, `webpack`, `webpack-dev-server`, `next`, `nuxt`, `nest`, `nodemon`, `ts-node`, `ts-node-dev`, `tsx`
 2. **Or** it is a bare `node` process with an active TCP listening socket
 
-Port detection works by cross-referencing `/proc/<pid>/fd/` socket inodes against `/proc/net/tcp` and `/proc/net/tcp6`.
+The same filter applies on both Linux and macOS.
+
+### Linux
+
+Port detection cross-references `/proc/<pid>/fd/` socket inodes against `/proc/net/tcp` and `/proc/net/tcp6`.
 
 Project names are resolved by walking up from the process's `cwd` (up to 3 levels) looking for a `package.json` with a `name` field.
 
 CPU usage is computed by sampling `/proc/<pid>/stat` twice, 200ms apart, on each stats interval.
+
+### macOS
+
+Port detection uses `lsof -nP -iTCP -sTCP:LISTEN -F pcn` to find listening TCP processes.
+
+Project names are resolved via `lsof -p <pid> -d cwd -Fn` to get the process working directory, then the same `package.json` walk as on Linux.
+
+CPU%, memory (RSS), and uptime are read from `ps -p <pid> -o pcpu=,rss=,etime=`.
+
+`lsof` and `ps` are standard macOS tools — no installation required.
 
 ### Platform support
 
 | Platform | Process scanning | `openUrl` |
 |---|---|---|
 | Linux | Full (`/proc`) | `xdg-open` |
-| macOS | Not yet implemented | `open` |
-| Windows | Not yet implemented | `start` |
+| macOS | Full (`lsof`, `ps`) | `open` |
+| Windows | Not implemented | `start` |
 
-Platform selection is automatic via `services/platform/index.js` — no configuration needed. Calling any unimplemented function on macOS or Windows throws `NotImplementedError`.
+Platform selection is automatic via `services/platform/index.js` — no configuration needed. Calling any unimplemented function on Windows throws `NotImplementedError`.
 
 ## Architecture
 
@@ -195,7 +212,7 @@ services/
   platform/
     index.js           # auto-selects based on process.platform
     linux/             # full implementation via /proc
-    darwin/            # stubs + working openUrl
+    darwin/            # full implementation via lsof/ps
     win32/             # stubs + working openUrl
   server/
     manager.js

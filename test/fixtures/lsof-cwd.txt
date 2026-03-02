@@ -1,0 +1,3 @@
+p1234
+fcwd
+n/home/user/projects/my-app

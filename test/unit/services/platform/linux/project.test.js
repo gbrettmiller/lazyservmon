@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { findProjectName } from '../../../../../services/platform/linux/project.js'
+import { findProjectName } from '../../../../../core/util/project.js'
 
 // Create an injectable fs stub from a map of path→content
 function makeFs(files) {
