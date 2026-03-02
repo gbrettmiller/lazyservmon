@@ -11,6 +11,9 @@ A LazyDocker-style terminal UI for monitoring development servers on Linux. It a
 ## Installation
 
 ```sh
+git clone https://github.com/gbrettmiller/lazyservmon.git
+cd lazyservmon
+
 # Install dependencies
 pnpm install
 
