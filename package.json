@@ -1,0 +1,23 @@
+{
+  "name": "lazyservmon",
+  "version": "0.1.0",
+  "description": "LazyDocker-style TUI for monitoring development servers",
+  "type": "module",
+  "bin": {
+    "lazyservmon": "./bin/lazyservmon.js"
+  },
+  "scripts": {
+    "start": "node bin/lazyservmon.js",
+    "test": "node --test test/unit/**/*.test.js",
+    "test:unit": "node --test test/unit/**/*.test.js",
+    "test:integration": "node --test test/integration/**/*.test.js",
+    "test:all": "node --test test/unit/**/*.test.js test/integration/**/*.test.js",
+    "lint": "eslint src/ bin/ test/"
+  },
+  "dependencies": {
+    "blessed": "^0.1.81"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  }
+}
