@@ -31,15 +31,15 @@ pnpm start
 lazyservmon
 ```
 
-### Hyprland / Omarchy keybinding
+### Hyprland keybinding
 
-If you use [Omarchy](https://omarchy.org/), the binding is already configured:
+To launch lazyservmon from a keybinding, add a line to `~/.config/hypr/bindings.conf` (or wherever you keep your Hyprland binds). For example:
 
 ```
-Super + Shift + V   → Dev servers (lazyservmon)
+bind = SUPER SHIFT, V, exec, omarchy-launch-tui lazyservmon
 ```
 
-This is defined in `~/.config/hypr/bindings.conf` via `omarchy-launch-tui lazyservmon`.
+`omarchy-launch-tui` is a launcher helper included with [Omarchy](https://omarchy.org/). Adjust the key combo to whatever you prefer — `SUPER SHIFT V` is just one example.
 
 ## Interface
 
