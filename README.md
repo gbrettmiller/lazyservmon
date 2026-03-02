@@ -1,12 +1,14 @@
 # lazyservmon
 
-A LazyDocker-style terminal UI for monitoring development servers on Linux. It automatically detects running dev server processes by reading `/proc`, and lets you start, stop, restart, and inspect managed servers you define in config.
+A LazyDocker-style terminal UI for monitoring development servers. It automatically detects running dev server processes and lets you start, stop, restart, and inspect managed servers you define in config.
+
+Process scanning is fully implemented on Linux (via `/proc`). macOS and Windows have stub implementations — `openUrl` works on both, but process detection is not yet implemented.
 
 ## Requirements
 
-- Linux (reads `/proc` and `/proc/net/tcp` directly)
 - Node.js (ESM)
 - pnpm
+- Linux for full functionality; macOS/Windows for `openUrl` only
 
 ## Installation
 
@@ -145,7 +147,7 @@ Press `R` inside the TUI to reload config from disk without restarting. Running 
 
 ## How process detection works
 
-On each scan interval, lazyservmon reads `/proc` to find running processes that look like dev servers. A process qualifies if:
+Process detection is Linux-only. On each scan interval, lazyservmon reads `/proc` to find running processes that look like dev servers. A process qualifies if:
 
 1. Its command basename matches a known dev tool: `vite`, `webpack`, `webpack-dev-server`, `next`, `nuxt`, `nest`, `nodemon`, `ts-node`, `ts-node-dev`, `tsx`
 2. **Or** it is a bare `node` process with an active TCP listening socket
@@ -156,6 +158,69 @@ Project names are resolved by walking up from the process's `cwd` (up to 3 level
 
 CPU usage is computed by sampling `/proc/<pid>/stat` twice, 200ms apart, on each stats interval.
 
+### Platform support
+
+| Platform | Process scanning | `openUrl` |
+|---|---|---|
+| Linux | Full (`/proc`) | `xdg-open` |
+| macOS | Not yet implemented | `open` |
+| Windows | Not yet implemented | `start` |
+
+Platform selection is automatic via `services/platform/index.js` — no configuration needed. Calling any unimplemented function on macOS or Windows throws `NotImplementedError`.
+
+## Architecture
+
+The project uses a 4-layer architecture:
+
+| Layer | Location | Purpose |
+|---|---|---|
+| Content | `content/strings.js` | All user-facing text: panel labels, detail labels, help text, key hints, fallbacks |
+| Design | `design/tokens.js` | Status icons/colors, border colors, layout dimensions, padding, format widths |
+| Core | `core/` | Pure logic, no I/O: `store`, `server/model`, `util/format`, `util/async` |
+| Services | `services/` | I/O-dependent modules: `config`, platform adapters, server lifecycle |
+| UI | `ui/` | All blessed TUI modules (`screen`, `layout`, `renderer`, `keys`, `panels/`) |
+| Orchestrator | `src/app.js` | Wires all layers together; runs poll loops and responds to events |
+
+```
+bin/lazyservmon.js
+content/strings.js
+design/tokens.js
+core/
+  store.js
+  server/model.js
+  util/format.js
+  util/async.js
+services/
+  config.js
+  platform/
+    index.js           # auto-selects based on process.platform
+    linux/             # full implementation via /proc
+    darwin/            # stubs + working openUrl
+    win32/             # stubs + working openUrl
+  server/
+    manager.js
+    lifecycle.js
+    logs.js
+src/app.js
+ui/
+  screen.js
+  layout.js
+  renderer.js
+  keys.js
+  panels/
+    server-list.js
+    details.js
+    logs.js
+test/
+  unit/
+    core/              # store, server/model, util tests
+    services/
+      platform/linux/  # ports, stats, project tests
+      server/          # lifecycle, logs tests
+  integration/         # config, scanner
+  fixtures/
+```
+
 ## Scripts
 
 ```sh
@@ -164,7 +229,7 @@ pnpm test               # Run unit tests
 pnpm test:unit          # Run unit tests (explicit)
 pnpm test:integration   # Run integration tests
 pnpm test:all           # Run all tests
-pnpm lint               # Lint src/, bin/, and test/
+pnpm lint               # Lint bin/, content/, core/, design/, services/, src/, ui/, test/
 ```
 
 Tests use Node.js's built-in `node:test` runner. No external test framework.

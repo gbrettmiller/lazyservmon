@@ -8,11 +8,11 @@
   },
   "scripts": {
     "start": "node bin/lazyservmon.js",
-    "test": "node --test test/unit/**/*.test.js",
-    "test:unit": "node --test test/unit/**/*.test.js",
-    "test:integration": "node --test test/integration/**/*.test.js",
-    "test:all": "node --test test/unit/**/*.test.js test/integration/**/*.test.js",
-    "lint": "eslint src/ bin/ test/"
+    "test": "node --test 'test/unit/**/*.test.js'",
+    "test:unit": "node --test 'test/unit/**/*.test.js'",
+    "test:integration": "node --test 'test/integration/**/*.test.js'",
+    "test:all": "node --test 'test/unit/**/*.test.js' 'test/integration/**/*.test.js'",
+    "lint": "eslint bin/ content/ core/ design/ services/ src/ ui/ test/"
   },
   "dependencies": {
     "blessed": "^0.1.81"

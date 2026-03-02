@@ -1,7 +1,7 @@
 import { test, describe, before, after } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { scanProcesses } from '../../src/proc/scanner.js'
+import { scanProcesses } from '../../services/platform/linux/scanner.js'
 
 const TEST_PORT = 19999
 

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
-import { loadConfig, saveConfig } from '../../src/config.js'
+import { loadConfig, saveConfig } from '../../services/config.js'
 
 describe('config round-trip', () => {
   let tmpDir

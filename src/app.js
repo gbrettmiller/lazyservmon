@@ -1,13 +1,12 @@
-import { loadConfig } from './config.js'
-import { createStore } from './store.js'
-import { scanProcesses } from './proc/scanner.js'
-import { getCpuPercent } from './proc/stats.js'
-import { makeManagedServer, updateServer } from './server/model.js'
-import { ServerManager } from './server/manager.js'
-import { getScreen, destroyScreen } from './tui/screen.js'
-import { createLayout } from './tui/layout.js'
-import { render } from './tui/renderer.js'
-import { registerKeys } from './tui/keys.js'
+import { loadConfig } from '../services/config.js'
+import { createStore } from '../core/store.js'
+import { scanProcesses, getCpuPercent } from '../services/platform/index.js'
+import { makeManagedServer, updateServer } from '../core/server/model.js'
+import { ServerManager } from '../services/server/manager.js'
+import { getScreen, destroyScreen } from '../ui/screen.js'
+import { createLayout } from '../ui/layout.js'
+import { render } from '../ui/renderer.js'
+import { registerKeys } from '../ui/keys.js'
 
 /**
  * Main application orchestrator.

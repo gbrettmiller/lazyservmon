@@ -1,6 +1,6 @@
 export default [
   {
-    files: ['src/**/*.js', 'bin/**/*.js', 'test/**/*.js'],
+    files: ['bin/**/*.js', 'content/**/*.js', 'core/**/*.js', 'design/**/*.js', 'services/**/*.js', 'src/**/*.js', 'ui/**/*.js', 'test/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
