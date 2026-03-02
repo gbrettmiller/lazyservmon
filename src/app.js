@@ -23,8 +23,16 @@ export async function createApp() {
   const widgets = createLayout(screen)
   const manager = new ServerManager(store)
 
-  // Initial render
-  const doRender = () => render(store.getState(), widgets, screen)
+  // Initial render — guard against re-entrant calls.
+  // blessed fires 'select item' synchronously inside setItems/select during
+  // render, which would loop back into doRender via store.setState → 'change'.
+  let rendering = false
+  const doRender = () => {
+    if (rendering) return
+    rendering = true
+    render(store.getState(), widgets, screen)
+    rendering = false
+  }
   store.on('change', doRender)
   store.on('log', doRender)
 
