@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import { findProjectName } from '../../../../../core/util/project.js'
+import { getProjectName } from '../../../../../services/platform/linux/project.js'
 
 // Create an injectable fs stub from a map of path→content
 function makeFs(files) {
@@ -69,5 +70,47 @@ describe('findProjectName', () => {
     // Very deep path but no package.json anywhere — should not infinite loop
     const name = await findProjectName('/a/b/c/d/e', 10, fs)
     assert.equal(name, null)
+  })
+})
+
+describe('getProjectName', () => {
+  test('resolves project name via procfs cwd and package.json walk', async () => {
+    const readlinkFn = async (path) => {
+      assert.equal(path, '/proc/1234/cwd')
+      return '/home/user/projects/my-app'
+    }
+    const readFn = makeFs({
+      '/home/user/projects/my-app/package.json': '{"name": "my-app"}',
+    })
+    const name = await getProjectName(1234, readFn, readlinkFn)
+    assert.equal(name, 'my-app')
+  })
+
+  test('returns null when readlinkFn throws (process gone)', async () => {
+    const readlinkFn = async () => { throw new Error('ENOENT') }
+    const readFn = makeFs({})
+    const name = await getProjectName(9999, readFn, readlinkFn)
+    assert.equal(name, null)
+  })
+
+  test('passes readFn through to findProjectName', async () => {
+    let readFnCalled = false
+    const readlinkFn = async () => '/srv/api'
+    const readFn = async (path) => {
+      readFnCalled = true
+      return path === '/srv/api/package.json' ? '{"name": "api-service"}' : null
+    }
+    const name = await getProjectName(42, readFn, readlinkFn)
+    assert.equal(name, 'api-service')
+    assert.ok(readFnCalled, 'injected readFn was not called')
+  })
+
+  test('does not throw when readFn is undefined (findProjectName default handles it)', async () => {
+    // readlinkFn returns a path that almost certainly has no package.json on this machine;
+    // the real defaultReadFn in findProjectName will gracefully return null for each miss
+    const readlinkFn = async () => '/tmp/__lazyservmon_no_such_dir__'
+    const name = await getProjectName(1, undefined, readlinkFn)
+    // we only care it didn't throw and returned null or a string
+    assert.ok(name === null || typeof name === 'string')
   })
 })

@@ -63,3 +63,4 @@ Public API exported by each platform: `scanProcesses`, `getCpuPercent`, `getMemB
 - `/proc/net/tcp` inode field is index **9** (0-based) in a whitespace-split line.
 - `blessed.log` panels: use `setContent` + `setScrollPerc(100)` — `log()` is append-only and can't be cleared.
 - `(2.15).toFixed(1)` → `'2.1'` (float rounding). Tests that assert formatted CPU values must account for this.
+- Injectable `readFn`/`readlinkFn` params in platform modules must **not** declare a default variable that doesn't exist in that file (e.g., `readFn = defaultReadFn`). Omit the default entirely and let the callee (`findProjectName`) use its own — otherwise the reference throws and scan silently returns no servers.

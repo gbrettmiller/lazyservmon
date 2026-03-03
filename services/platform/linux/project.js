@@ -10,7 +10,7 @@ const MAX_WALK_DEPTH = 3
  * @param {Function} [readlinkFn] - injectable readlink for testing
  * @returns {Promise<string|null>}
  */
-export async function getProjectName(pid, readFn = defaultReadFn, readlinkFn = readlink) {
+export async function getProjectName(pid, readFn, readlinkFn = readlink) {
   try {
     const cwd = await readlinkFn(`/proc/${pid}/cwd`)
     return await findProjectName(cwd, MAX_WALK_DEPTH, readFn)
